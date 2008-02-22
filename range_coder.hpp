@@ -12,9 +12,9 @@ struct rc_type_t {
   typedef unsigned char byte;
 };
 
-template <class Store> class rc_encoder_t : public rc_type_t {
+template <class Iter> class rc_encoder_t : public rc_type_t {
 public:
-  rc_encoder_t(Store *_store) : store(_store) {
+  rc_encoder_t(const Iter &i) : iter(i) {
     L      = 0;
     R      = 0xFFFFFFFF;
     buffer = 0;
@@ -35,7 +35,7 @@ public:
       //buffer FF FF .. FF -> buffer+1 00 00 .. 00
       buffer++;
       for (;carryN > 0; carryN--) {
-	store->push_back(buffer);
+	*iter++ = buffer;
 	buffer = 0;
       }
     }
@@ -48,9 +48,9 @@ public:
       } else if (newBuffer == 0xFF) {
 	carryN++;
       } else {
-	store->push_back(buffer);
+	*iter++ = buffer;
 	for (; carryN != 0; carryN--) {
-	  store->push_back(0xFF);
+	  *iter++ = 0xFF;
 	}
 	buffer = newBuffer;
       }
@@ -60,14 +60,14 @@ public:
     counter++;
   }
   void final() {
-    store->push_back(buffer);
+    *iter++ = buffer;
     for (; carryN != 0; carryN--) {
-      store->push_back(0xFF);
+      *iter++ = 0xFF;
     }
     uint t = L + R;
     while (1) {
       uint t8 = t >> 24, l8 = L >> 24;
-      store->push_back(l8);
+      *iter++ = l8;
       if (t8 != l8) {
 	break;
       }
@@ -81,7 +81,7 @@ private:
   bool start;
   byte buffer;
   uint carryN;
-  Store* store;
+  Iter iter;
   uint counter;
 };
 
