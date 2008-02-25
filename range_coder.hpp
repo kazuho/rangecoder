@@ -1,6 +1,10 @@
 #ifndef __RANGE_CODER_HPP__
 #define __RANGE_CODER_HPP__
 
+#ifdef RANGE_CODER_USE_SSE
+#include <xmmintrin.h>
+#endif
+
 // original work by Daisuke Okanohara 2006/06/16
 
 struct rc_type_t {
@@ -85,8 +89,55 @@ private:
   uint counter;
 };
 
-template <class Iterator, unsigned N> class rc_decoder_t : public rc_type_t {
+template <typename FreqType, unsigned _N> struct rc_decoder_search_traits_t : public rc_type_t {
+  typedef FreqType freq_type;
+  enum {
+    N = _N
+  };
+};
+
+template <typename FreqType, unsigned _N> struct rc_decoder_search_t : public rc_decoder_search_traits_t<FreqType, _N> {
+  static uint get_index(const FreqType *freq, uint pos) {
+    uint left  = 0;
+    uint right = _N;
+    while(left < right) {
+      uint mid = (left+right)/2;
+      if (static_cast<uint>(freq[mid+1]) <= pos)
+	left = mid+1;
+      else
+	right = mid;
+    }
+    return left;
+  }
+};
+
+#ifdef RANGE_CODER_USE_SSE
+
+template<> struct rc_decoder_search_t<short, 256> : public rc_decoder_search_traits_t<short, 256> {
+  static uint get_index(const freq_type *freq, uint pos) {
+    __m128i v = _mm_set1_epi16(pos);
+    unsigned i, mask = 0;
+    for (i = 0; i < N; i += 16) {
+      __m128i x = *reinterpret_cast<const __m128i*>(freq + i);
+      __m128i y = *reinterpret_cast<const __m128i*>(freq + i + 8);
+      __m128i a = _mm_cmplt_epi16(v, x);
+      __m128i b = _mm_cmplt_epi16(v, y);
+      mask = (_mm_movemask_epi8(b) << 16) | _mm_movemask_epi8(a);
+      if (mask) {
+	break;
+      }
+    }
+    return i + (__builtin_ctz(mask) >> 1) - 1;
+  }
+};
+
+#endif
+
+template <class Iterator, class SearchType> class rc_decoder_t : public rc_type_t {
 public:
+  typedef SearchType search_type;
+  typedef typename search_type::freq_type freq_type;
+  static const unsigned N = search_type::N;
   rc_decoder_t(const Iterator& _i, const Iterator _e) : iter(_i), iter_end(_e) {
     R = 0xFFFFFFFF;
     D = 0;
@@ -94,20 +145,12 @@ public:
       D = (D << 8) | next();
     }
   }
-  uint decode(const uint total, const uint* cumFreq) {
+  uint decode(const uint total, const freq_type* cumFreq) {
     const uint r = R / total;
     const uint targetPos = std::min(total-1, D / r);
     
     //find target s.t. cumFreq[target] <= targetPos < cumFreq[target+1]
-    uint left  = 0;
-    uint right = N;
-    while(left < right) {
-      uint mid = (left+right)/2;
-      if (cumFreq[mid+1] <= targetPos) left = mid+1;
-      else                             right = mid;
-    }
-    
-    const uint target = left;
+    const uint target = search_type::get_index(cumFreq, targetPos);
     const uint low  = cumFreq[target];
     const uint high = cumFreq[target+1];
     
