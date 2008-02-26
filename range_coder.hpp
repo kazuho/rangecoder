@@ -123,10 +123,10 @@ template<int _BASE> struct rc_decoder_search_t<short, 256, _BASE> : public rc_de
       __m128i b = _mm_cmplt_epi16(v, y);
       mask = (_mm_movemask_epi8(b) << 16) | _mm_movemask_epi8(a);
       if (mask) {
-	break;
+	return i + (__builtin_ctz(mask) >> 1) - 1;
       }
     }
-    return i + (__builtin_ctz(mask) >> 1) - 1;
+    return 255;
   }
 };
 
