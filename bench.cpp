@@ -51,8 +51,7 @@ int main(int argc, char **argv)
       ch = to_ordered[ch];
 #endif
       assert(freq[ch] != freq[ch + 1]);
-      enc.encode(freq[ch] - FREQ_BASE, freq[ch + 1] - FREQ_BASE,
-		 freq[256] - FREQ_BASE);
+      enc.encode(freq[ch] - FREQ_BASE, freq[ch + 1] - FREQ_BASE, MAX_FREQ);
     }
     enc.final();
     cbuflen = cbufpt - cbuf;
@@ -64,7 +63,7 @@ int main(int argc, char **argv)
     rc_decoder_t<const char*, rc_decoder_search_t<short, 256, FREQ_BASE> >
       dec(cbuf, cbuf + cbuflen);
     for (char *p = rbuf, *e = rbuf + buflen; p != e; p++) {
-      unsigned ch = dec.decode(freq[256] - FREQ_BASE, freq);
+      unsigned ch = dec.decode(MAX_FREQ, freq);
 #ifdef USE_ORDERED_TABLE
       ch = from_ordered[ch];
 #endif

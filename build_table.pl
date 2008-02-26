@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-use List::Util qw/sum/;
+use List::Util qw/sum max/;
 
 my ($do_ordered);
 
@@ -33,10 +33,22 @@ if ($do_ordered) {
 my @freq;
 my $acc = 0;
 my $cc = sum @cnt;
-for (my $i = 0; $i < 256; $i++) {
-    push @freq, $acc;
-    $acc += int(($cnt[$i] / $cc) * 0xfe00);
+my ($mult, $mult_diff) = (0x8000, 0);
+while (1) {
+    $acc = 0;
+    for (my $i = 0; $i < 256; $i++) {
+	push @freq, $acc;
+	$acc += $cnt[$i] != 0 ? max(int($cnt[$i] / $cc * $mult + 0.5), 1) : 0;
+    }
+    last if $acc == 0x8000;
+    @freq = ();
+    $mult_diff = $mult_diff != 0 ? $mult_diff / 2 : abs($acc - 0x8000);
+    if ($acc < 0x8000) {
+	$mult += $mult_diff;
+    } else {
+	$mult -= $mult_diff;
+    }
 }
-push @freq, $acc;
 
+print "#define MAX_FREQ 0x8000\n";
 print "static short freq[] __attribute__((aligned(16))) = {", join(',', map { $_ - 0x8000 } @freq), "};\n";
