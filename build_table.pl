@@ -31,24 +31,20 @@ if ($do_ordered) {
 }
 
 my @freq;
-my $acc = 0;
 my $cc = sum @cnt;
-my ($mult, $mult_diff) = (0x8000, 0);
+my $mult = 0x8000;
 while (1) {
-    $acc = 0;
+    print STDERR "$mult\n";
+    my $acc = 0;
     for (my $i = 0; $i < 256; $i++) {
 	push @freq, $acc;
 	$acc += $cnt[$i] != 0 ? max(int($cnt[$i] / $cc * $mult + 0.5), 1) : 0;
     }
-    last if $acc == 0x8000;
+    last if $acc <= 0x8000;
     @freq = ();
-    $mult_diff = $mult_diff != 0 ? $mult_diff / 2 : abs($acc - 0x8000);
-    if ($acc < 0x8000) {
-	$mult += $mult_diff;
-    } else {
-	$mult -= $mult_diff;
-    }
+    $mult--;
 }
+push @freq, 0x8000;
 
 print "#define MAX_FREQ 0x8000\n";
 print "static short freq[] __attribute__((aligned(16))) = {", join(',', map { $_ - 0x8000 } @freq), "};\n";
