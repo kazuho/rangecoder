@@ -89,23 +89,22 @@ private:
   uint counter;
 };
 
-template <typename FreqType, unsigned _N> struct rc_decoder_search_traits_t : public rc_type_t {
+template <typename FreqType, unsigned _N, int _BASE> struct rc_decoder_search_traits_t : public rc_type_t {
   typedef FreqType freq_type;
   enum {
-    N = _N
+    N = _N,
+    BASE = _BASE
   };
 };
 
-template <typename FreqType, unsigned _N> struct rc_decoder_search_t : public rc_decoder_search_traits_t<FreqType, _N> {
-  static uint get_index(const FreqType *freq, uint pos) {
+template <typename FreqType, unsigned _N, int _BASE = 0> struct rc_decoder_search_t : public rc_decoder_search_traits_t<FreqType, _N, _BASE> {
+  static uint get_index(const FreqType *freq, FreqType pos) {
     uint left  = 0;
     uint right = _N;
     while(left < right) {
       uint mid = (left+right)/2;
-      if (static_cast<uint>(freq[mid+1]) <= pos)
-	left = mid+1;
-      else
-	right = mid;
+      if (freq[mid+1] <= pos) left = mid+1;
+      else                    right = mid;
     }
     return left;
   }
@@ -113,11 +112,11 @@ template <typename FreqType, unsigned _N> struct rc_decoder_search_t : public rc
 
 #ifdef RANGE_CODER_USE_SSE
 
-template<> struct rc_decoder_search_t<short, 256> : public rc_decoder_search_traits_t<short, 256> {
-  static uint get_index(const freq_type *freq, uint pos) {
+template<int _BASE> struct rc_decoder_search_t<short, 256, _BASE> : public rc_decoder_search_traits_t<short, 256, _BASE> {
+  static uint get_index(const short *freq, short pos) {
     __m128i v = _mm_set1_epi16(pos);
     unsigned i, mask = 0;
-    for (i = 0; i < N; i += 16) {
+    for (i = 0; i < 256; i += 16) {
       __m128i x = *reinterpret_cast<const __m128i*>(freq + i);
       __m128i y = *reinterpret_cast<const __m128i*>(freq + i + 8);
       __m128i a = _mm_cmplt_epi16(v, x);
@@ -147,12 +146,13 @@ public:
   }
   uint decode(const uint total, const freq_type* cumFreq) {
     const uint r = R / total;
-    const uint targetPos = std::min(total-1, D / r);
+    const int targetPos = std::min(total-1, D / r);
     
     //find target s.t. cumFreq[target] <= targetPos < cumFreq[target+1]
-    const uint target = search_type::get_index(cumFreq, targetPos);
-    const uint low  = cumFreq[target];
-    const uint high = cumFreq[target+1];
+    const uint target =
+      search_type::get_index(cumFreq, targetPos + search_type::BASE);
+    const uint low  = cumFreq[target] - search_type::BASE;
+    const uint high = cumFreq[target+1] - search_type::BASE;
     
     D -= r * low;
     if (high != total) {
