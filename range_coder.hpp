@@ -1,5 +1,5 @@
 /*
- * Copyrgght (c) 2006, Daisuke Okanohara
+ * Copyright (c) 2006, Daisuke Okanohara
  * Copyright (c) 2008, Cybozu Labs, Inc.
  * All rights reserved.
  * 
