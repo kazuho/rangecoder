@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2006, Daisuke Okanohara
- * Copyright (c) 2008, Cybozu Labs, Inc.
+ * Copyrgght (c) 2006, Daisuke Okanohara
+ * Copyright (c) 2008-2010, Cybozu Labs, Inc.
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -128,7 +128,7 @@ template <typename FreqType, unsigned _N, int _BASE> struct rc_decoder_search_tr
 template <typename FreqType, unsigned _N, int _BASE = 0> struct rc_decoder_search_t : public rc_decoder_search_traits_t<FreqType, _N, _BASE> {
   static rc_type_t::uint get_index(const FreqType *freq, FreqType pos) {
     rc_type_t::uint left  = 0;
-    rc_type_t::uint right = _N;
+    rc_type_t::uint right = _N - 1;
     while(left < right) {
       rc_type_t::uint mid = (left+right)/2;
       if (freq[mid+1] <= pos) left = mid+1;
