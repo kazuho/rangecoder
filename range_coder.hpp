@@ -1,11 +1,11 @@
 /*
- * Copyrgght (c) 2006, Daisuke Okanohara
+ * Copyright (c) 2006, Daisuke Okanohara
  * Copyright (c) 2008-2010, Cybozu Labs, Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above copyright notice,
@@ -14,7 +14,7 @@
  * * Neither the name of the copyright holders nor the names of its
  *   contributors may be used to endorse or promote products derived from this
  *   software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -63,28 +63,28 @@ public:
     }
     uint newL = L + r*low;
     if (newL < L) {
-      //overflow occured (newL >= 2^32)
-      //buffer FF FF .. FF -> buffer+1 00 00 .. 00
+      // overflow occured (newL >= 2^32)
+      // buffer FF FF .. FF -> buffer+1 00 00 .. 00
       buffer++;
       for (;carryN > 0; carryN--) {
-	*iter++ = buffer;
-	buffer = 0;
+        *iter++ = buffer;
+        buffer = 0;
       }
     }
     L = newL;
     while (R < TOP) {
       const byte newBuffer = (L >> 24);
       if (start) {
-	buffer = newBuffer;
-	start  = false;
+        buffer = newBuffer;
+        start  = false;
       } else if (newBuffer == 0xFF) {
-	carryN++;
+        carryN++;
       } else {
-	*iter++ = buffer;
-	for (; carryN != 0; carryN--) {
-	  *iter++ = 0xFF;
-	}
-	buffer = newBuffer;
+        *iter++ = buffer;
+        for (; carryN != 0; carryN--) {
+          *iter++ = 0xFF;
+        }
+        buffer = newBuffer;
       }
       L <<= 8;
       R <<= 8;
@@ -101,7 +101,7 @@ public:
       uint t8 = t >> 24, l8 = L >> 24;
       *iter++ = l8;
       if (t8 != l8) {
-	break;
+        break;
       }
       t <<= 8;
       L <<= 8;
@@ -151,7 +151,7 @@ template<int _BASE> struct rc_decoder_search_t<short, 256, _BASE> : public rc_de
       __m128i b = _mm_cmplt_epi16(v, y);
       mask = (_mm_movemask_epi8(b) << 16) | _mm_movemask_epi8(a);
       if (mask) {
-	return i + (__builtin_ctz(mask) >> 1) - 1;
+        return i + (__builtin_ctz(mask) >> 1) - 1;
       }
     }
     return 255;
@@ -175,25 +175,25 @@ public:
   uint decode(const uint total, const freq_type* cumFreq) {
     const uint r = R / total;
     const int targetPos = std::min(total-1, D / r);
-    
-    //find target s.t. cumFreq[target] <= targetPos < cumFreq[target+1]
+
+    // find target s.t. cumFreq[target] <= targetPos < cumFreq[target+1]
     const uint target =
       search_type::get_index(cumFreq, targetPos + search_type::BASE);
     const uint low  = cumFreq[target] - search_type::BASE;
     const uint high = cumFreq[target+1] - search_type::BASE;
-    
+
     D -= r * low;
     if (high != total) {
       R = r * (high-low);
     } else {
       R -= r * low;
     }
-    
+
     while (R < TOP) {
       R <<= 8;
       D = (D << 8) | next();
     }
-    
+
     return target;
   }
   byte next() {
