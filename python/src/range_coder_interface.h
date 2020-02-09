@@ -20,18 +20,18 @@ typedef std::istreambuf_iterator<char> InputIterator;
 typedef rc_decoder_search_t<unsigned int, MAX_NUM_SYMBOLS, 0> SearchType;
 
 struct RangeEncoderObject {
-  PyObject_HEAD
-  rc_encoder_t<OutputIterator>* encoder;
-  OutputIterator* iter;
-  std::ofstream* fout;
+	PyObject_HEAD
+	rc_encoder_t<OutputIterator>* encoder;
+	OutputIterator* iter;
+	std::ofstream* fout;
 };
 
 struct RangeDecoderObject {
-  PyObject_HEAD
-  rc_decoder_t<InputIterator, SearchType>* decoder;
-  InputIterator* begin;
-  InputIterator* end;
-  std::ifstream* fin;
+	PyObject_HEAD
+	rc_decoder_t<InputIterator, SearchType>* decoder;
+	InputIterator* begin;
+	InputIterator* end;
+	std::ifstream* fin;
 };
 
 PyObject* RangeEncoder_new(PyTypeObject*, PyObject*, PyObject*);
