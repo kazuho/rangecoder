@@ -138,26 +138,27 @@ def test_range_decoder():
 
 def test_range_encoder_decoder():
 	"""
-	Additional tests whether RangeDecoder reproduces symbols encoded by RangeEncoder.
+	Additional tests to check whether RangeDecoder reproduces symbols encoded by RangeEncoder.
 	"""
 
 	random.seed(0)
 
 	filepath = mkstemp()[1]
 
-	cumFreq = [0.25, 0.25, 0.5]
+	for _ in range(20):
+		numSymbols = np.random.randint(1, 6)
+		cumFreq = [0] + np.cumsum(np.random.randint(1, 10, size=numSymbols)).tolist()
+		data = np.random.randint(numSymbols, size=np.random.randint(20)).tolist()
 
-	data = [0, 1, 2]
+		encoder = RangeEncoder(filepath)
+		encoder.encode(data, cumFreq)
+		encoder.close()
 
-	encoder = RangeEncoder(filepath)
-	encoder.encode(data, cumFreq)
-	encoder.close()
+		decoder = RangeDecoder(filepath)
+		dataRec = decoder.decode(len(data), cumFreq)
+		decoder.close()
 
-	decoder = RangeDecoder(filepath)
-	dataRec = decoder.decode(len(data), cumFreq)
-	decoder.close()
-
-	assert data == dataRec
+		assert data == dataRec
 
 	os.remove(filepath)
 

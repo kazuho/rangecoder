@@ -101,9 +101,11 @@ template <class Iter> class rc_encoder_t : public rc_type_t {
 		}
 
 		void final() {
-			*iter++ = buffer;
-			for (; carryN != 0; carryN--) {
-				*iter++ = 0xFF;
+			if (!start) {
+				*iter++ = buffer;
+				for (; carryN != 0; carryN--) {
+					*iter++ = 0xFF;
+				}
 			}
 
 			uint t = L + R;
