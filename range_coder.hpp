@@ -31,6 +31,8 @@
 #ifndef __RANGE_CODER_HPP__
 #define __RANGE_CODER_HPP__
 
+#include <algorithm>
+
 #ifdef RANGE_CODER_USE_SSE
 #include <xmmintrin.h>
 #endif
