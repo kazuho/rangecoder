@@ -2,7 +2,7 @@ from setuptools import setup, Extension
 
 setup(
 	name="range_coder",
-	version="1.1.1",
+	version="1.1.2",
 	description="A fast implementation of a range coder",
 	packages=["range_coder"],
 	package_dir={"range_coder": "python"},

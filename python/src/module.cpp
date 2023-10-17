@@ -123,7 +123,7 @@ PyTypeObject RangeDecoder_type = {
 static PyModuleDef range_coder_module = {
 	PyModuleDef_HEAD_INIT,
 	"_range_coder",
-	"A fast implementation of a range encoder and decoder."
+	"A fast implementation of a range encoder and decoder.",
 	-1, 0, 0, 0, 0, 0
 };
 #endif
